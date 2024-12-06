@@ -17,6 +17,7 @@ import ProjectedNetProfitMargin from "../../NewComponents/ProjectedNetProfitMarg
 import CustomMetric from "../../NewComponents/CustomMetric";
 import NotesComponent from "../../NewComponents/NotesComponent";
 import TopBar from "../../NewComponents/TopBar";
+import { Button } from '../../components/ui/button';
 import MetricCard from "../../NewComponents/MetricCard";
 import { useParams } from "react-router-dom";
 import useBusinessStore from "../../store/buisnessSrore";
@@ -121,9 +122,65 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const calculateMetrics = () => {
+      
+      const totalDebtPayments = state.sbaLoanPayment + state.additionalLoanPayment || 0; 
+      
+      const dscr = state.totalDebtPayments > 0 
+        ? (state.currentCashflow + state.expectedSalary) / state.totalDebtPayments 
+        : 0;
+  
+      const projectedCashflow = state.currentCashflow - state.totalDebtPayments;
+  
+      const grossMultiple = state.grossRevenue > 0 
+        ? state.askingPrice / state.grossRevenue 
+        : 0;
+  
+      const sdeMultiple = state.sde > 0 
+        ? state.askingPrice / state.sde 
+        : 0;
 
-    //logic for updating the state
-  },[state])
+        
+  
+      const projectedNetProfitMargin = state.grossRevenue > 0 
+        ? (projectedCashflow / state.grossRevenue) * 100 
+        : 0;
+  
+      setState((prevState) => ({
+        ...prevState,
+        totalDebtPayments,
+        dscr,
+        projectedCashflow,
+        grossMultiple,
+        sdeMultiple,
+        projectedNetProfitMargin,
+      }));
+    };
+  
+    calculateMetrics();
+  }, [
+    state.totalDebtPayments,
+    state.currentCashflow,
+    state.expectedSalary,
+    state.totalDebtPayments,
+    state.askingPrice,
+    state.grossRevenue,
+    state.sde,
+  ]);
+  
+  const handleSave = async () => {
+    const payload = {
+      current_cashflow: {value: state.currentCashflow, notes: state.notes.currentCashflow},
+      expected_salary: {value: state.expectedSalary, notes: state.notes.expectedSalary},
+      gross_revenue: {value: state.grossRevenue, notes: state.notes.grossRevenue},
+      asking_price: {value: state.askingPrice, notes: state.notes.askingPrice},
+      loan_sba: {amount: state.sbaLoanPayment, term: state.loan_sba_term, rate: state.loan_sba_rate, notes: state.notes.sbaLoanPayment},
+      additional_loan: {amount: state.additionalLoanPayment, term: state.additional_loan_term, rate: state.additional_loan_rate, notes: state.notes.additionalLoanPayment},
+      
+    };
+    const updated = await updateBusiness(businessid || "", payload);
+    console.log("updated", updated);
+  }
 
 
   const updateLoanSba = (value: {amount:number, term:number, rate:number}) => {
@@ -419,6 +476,7 @@ const App: React.FC = () => {
           )}
         </Droppable>
       </DragDropContext>
+      <Button onClick={handleSave}>Save Changes</Button>
       <Card
             value={state.customMetric}
             onSave={(value) => updateState("customMetric", value)}
