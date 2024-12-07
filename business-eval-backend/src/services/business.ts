@@ -18,8 +18,6 @@ const createBusiness = async (body: TBusinessTypes) => {
 };
 
 const updateBusiness = async (id: string, body: any) => {
-    console.log(body);
-    
     const checkBusiness = await db.business.findById(id);
     if (!checkBusiness) {
         throw new ApiError(httpStatus.BAD_REQUEST, 'Business not found');
@@ -27,6 +25,8 @@ const updateBusiness = async (id: string, body: any) => {
     const business = await db.business.findByIdAndUpdate(id, {
         $set: body
     },{new:true});
+
+    
     return business;
 };
 
@@ -41,11 +41,11 @@ const getBusinessById = async (id: string) => {
 
 const getAllBusinessMetrics = async (user_id:string) => {
     const businesses = await db.business.find({user_id});
-    const metrics = await Promise.all(businesses.map(async (business) => {
-        const metrics = await calculateAllBusinessMetrics(business);
-        return {data:business, metrics};
-    }));
-    return metrics;
+    // const metrics = await Promise.all(businesses.map(async (business) => {
+    //     const metrics = await calculateAllBusinessMetrics(business);
+    //     return {data:business, metrics};
+    // }));
+    return businesses;
 };
 
 const deleteBusiness = async (id: string) => {

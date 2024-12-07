@@ -49,11 +49,11 @@ const getBusinessById = (id) => __awaiter(void 0, void 0, void 0, function* () {
 });
 const getAllBusinessMetrics = (user_id) => __awaiter(void 0, void 0, void 0, function* () {
     const businesses = yield models_1.default.business.find({ user_id });
-    const metrics = yield Promise.all(businesses.map((business) => __awaiter(void 0, void 0, void 0, function* () {
-        const metrics = yield (0, business_1.calculateAllBusinessMetrics)(business);
-        return { data: business, metrics };
-    })));
-    return metrics;
+    // const metrics = await Promise.all(businesses.map(async (business) => {
+    //     const metrics = await calculateAllBusinessMetrics(business);
+    //     return {data:business, metrics};
+    // }));
+    return businesses;
 });
 const deleteBusiness = (id) => __awaiter(void 0, void 0, void 0, function* () {
     const business = yield models_1.default.business.findByIdAndDelete(id);

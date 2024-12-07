@@ -1,21 +1,73 @@
-
 import * as React from "react"
 import { ArrowLeft, LinkIcon, Pencil, Upload } from 'lucide-react'
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Link } from "react-router-dom"
+import AWS from 'aws-sdk'
+import { toast } from 'react-toastify' 
+import { fetchBusiness } from '../store/buisnessSrore'
 
-export default function TopBar({data}:{
-  data:any
-}) {
-  const [isModalOpen, setIsModalOpen] = React.useState(false); // State to control the modal
-  const [isEditingNotes, setIsEditingNotes] = React.useState(false); // State to control the notes input box
-  const [notes, setNotes] = React.useState(""); // State to store notes text
+export default function TopBar({ data }: { data: any }) {
+  const [isModalOpen, setIsModalOpen] = React.useState(false)
+  const [isEditingNotes, setIsEditingNotes] = React.useState(false)
+  const [notes, setNotes] = React.useState("")
+  const [isUploading, setIsUploading] = React.useState(false) // State for uploading
   const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+  // AWS S3 setup
+  const s3 = new AWS.S3({
+    accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY_ID, // Make sure to securely store keys
+    secretAccessKey: process.env.REACT_APP_AWS_SECRET_ACCESS_KEY,
+    region: 'us-east-1', // or your AWS region
+  })
 
   const handleUploadClick = () => {
     fileInputRef.current?.click()
+  }
+
+  const uploadFileToS3 = async (file: File) => {
+    const params = {
+      Bucket: 'your-s3-bucket-name',
+      Key: `uploads/${file.name}`, // You can customize the file path in S3
+      Body: file,
+      ContentType: file.type,
+      ACL: 'public-read', // You can change the ACL to suit your needs
+    }
+
+    try {
+      const data = await s3.upload(params).promise()
+      return data.Location // This returns the URL of the uploaded file
+    } catch (err) {
+      throw new Error('File upload failed: ' + err.message)
+    }
+  }
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.stopPropagation()
+    const file = event.target.files?.[0]
+    if (file) {
+      setIsUploading(true)
+      try {
+        const fileUrl = await uploadFileToS3(file)
+        toast.success('File uploaded successfully!')
+
+        // Here you can update any state or make API calls if needed
+        console.log('File uploaded to:', fileUrl)
+
+        // Optionally, trigger any additional actions (e.g., save the URL to DB)
+        // await saveFileUrlToDatabase(fileUrl);
+
+        // Refresh business data to get updated attachments
+        await fetchBusiness(data?.id)
+
+      } catch (error) {
+        console.error('File upload failed:', error)
+        toast.error('Failed to upload file. Please try again.')
+      } finally {
+        setIsUploading(false)
+      }
+    }
   }
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,19 +78,19 @@ export default function TopBar({data}:{
   }
 
   const openModal = () => {
-    setIsModalOpen(true); 
+    setIsModalOpen(true)
   }
 
   const closeModal = () => {
-    setIsModalOpen(false); 
+    setIsModalOpen(false)
   }
 
   const toggleEditNotes = () => {
-    setIsEditingNotes((prev) => !prev); 
+    setIsEditingNotes((prev) => !prev)
   }
 
   const handleNotesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setNotes(event.target.value); 
+    setNotes(event.target.value)
   }
 
   return (
@@ -116,7 +168,7 @@ export default function TopBar({data}:{
       <input
         type="file"
         ref={fileInputRef}
-        onChange={handleFileChange}
+        onChange={handleFileUpload}
         accept="image/*"
         style={{ display: 'none' }}
       />

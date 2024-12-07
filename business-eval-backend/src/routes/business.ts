@@ -6,8 +6,8 @@ import { createBusinessValidator, newMetricSchema, updateBusinessValidator, upda
 
 const router = express.Router();
 
-router.post('/', validate(createBusinessValidator), createBusiness);
-router.put('/:id', validate(updateBusinessValidator), updateBusiness);
+router.post('/', createBusiness);
+router.put('/:id', updateBusiness);
 router.get("/", isAuthenticated, getAllBusiness);
 router.get('/:id', getBusinessById);
 router.delete('/:id', isAuthenticated, deleteBusiness);

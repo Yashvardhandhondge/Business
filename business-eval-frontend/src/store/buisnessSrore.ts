@@ -27,7 +27,7 @@ const useBusinessStore = create<BusinessState>((set) => ({
       const userId = localStorage.getItem('user_id');
       const businessPayload = {
         ...businessData,
-        // user_id: userId,
+        user_id: userId,
       };
 
       if (userId) {

@@ -97,6 +97,7 @@ const businessSchema: Schema = new Schema({
       term: {type: Number, default:0},
       notes: {type:[String], default:[]}
     },
+    sde:MetricSchema,
     new_expenses: MetricSchema,//New Expenses
     expected_salary: MetricSchema,//expected salary
     loan_down_payment: MetricSchema,
